@@ -1,7 +1,7 @@
 const express = require("express");
 
 const Posts = require("./data/db.js");
-const { json } = require("express");
+
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.post("/", (req, res) => {
 		})
 		.catch((err) => {
 			res.status(500).json({
-				error: "There was an error while saving the post to the database",
+				error: "There was an error while saving the post to the database", err
 			});
 		});
 });
@@ -97,12 +97,10 @@ router.get("/:id/comments", (req, res) => {
 			}
 		})
 		.catch((err) => {
-			res
-				.status(500)
-				.json({
-					error: "The comments information could not be retrieved.",
-					err,
-				});
+			res.status(500).json({
+				error: "The comments information could not be retrieved.",
+				err,
+			});
 		});
 });
 
@@ -124,7 +122,38 @@ router.delete("/:id", (req, res) => {
 });
 
 //Update
+router.put("/:id", (req, res) => {
+	const postUpdate = req.body;
+	const postId = req.params.id;
 
-
+	Posts.findById(postId)
+		.then(() => {
+			if (!postUpdate.title || !postUpdate.contents) {
+				res
+					.status(400)
+					.json({
+						errorMessage: "Please provide title and contents for the post.",
+					});
+			} else {
+				Posts.update(postId, postUpdate)
+					.then(() => {
+						res.status(200).json(postUpdate);
+					})
+					.catch((err) => {
+						res
+							.status(404)
+							.json({
+								message: "The post with the specified ID does not exist.",
+								err,
+							});
+					});
+			}
+		})
+		.catch((err) => {
+			res
+				.status(500)
+				.json({ error: "The post information could not be modified.", err });
+		});
+});
 
 module.exports = router;
